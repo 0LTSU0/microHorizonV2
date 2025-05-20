@@ -7,18 +7,18 @@ on:
 
 jobs:
     Build:
-        runs-on: windows-latest
+        runs-on: ubuntu-latest
         steps:
             - name: Checkout
               uses: actions/checkout@v4
             
             - name: Build project 
-              run: scripts/build_win.bat
-
+              run: scripts/build_linux.sh
+            
             - name: Store artifacts
               uses: actions/upload-artifact@v4
               with:
-                name: "Build_Windows_x64"
+                name: "Build_Linux_x64"
                 path: build/**
                 retention-days: 5
 
