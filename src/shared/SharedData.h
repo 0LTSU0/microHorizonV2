@@ -46,15 +46,24 @@ struct RoadInfo {
 	std::vector<osmium::Location> nodes;
 };
 
+enum RoadLoaderState {
+	NOT_INITIALIZED,
+	LOADING_MAP,
+	IDLE
+};
+
 struct SharedData {
 	std::queue<inputPosition> incomingPositions;
 	std::vector<RoadInfo> mapData;
 
 	std::mutex inputPosMutex;
+	std::mutex mapDataMutex;
+	std::mutex roadLoaderStateMutex;
 
 	std::atomic<bool> initialValidPosReceived{ false };
 	std::atomic<bool> initialMapLoadDone{ false };
 	std::atomic<bool> appIsRunning{ true };
+	std::atomic<RoadLoaderState> roadLoaderState{ RoadLoaderState::NOT_INITIALIZED };
 };
 
 } // namespace sharedData

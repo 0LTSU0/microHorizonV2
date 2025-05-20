@@ -7,7 +7,7 @@
 #include <tracer.h>
 #include <configurator.h>
 #include <posInputWorker.h>
-
+#include <RoadLoader.h>
 
 
 int main(int argc, char* argv[])
@@ -28,6 +28,8 @@ int main(int argc, char* argv[])
 	// Create and start threads
 	posInputWorker w_posInput(sharedData, appConfigurator.getPosMode(), appConfigurator.getUDPPort());
 	std::thread posInputThread(&posInputWorker::run, &w_posInput);
+	RoadLoader w_roadLoader(sharedData, appConfigurator.getLoadRadius(), appConfigurator.getMapPath());
+	std::thread roadLoaderThread(&RoadLoader::run, &w_roadLoader);
 	
 	//TODO: implement some method for quitting the app
 	Tracer::log("Sleep in main thread for seconds: " + std::to_string(args.appTimeOut), traceLevel::DEBUG);
@@ -37,6 +39,7 @@ int main(int argc, char* argv[])
 	Tracer::log("Setting sharedData->appIsRunning=false and waiting for workers to quit", traceLevel::INFO);
 	sharedData->appIsRunning = false;
 	posInputThread.join();
+	roadLoaderThread.join();
 
 	return 0;
 }

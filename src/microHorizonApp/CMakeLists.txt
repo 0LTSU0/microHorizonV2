@@ -4,8 +4,8 @@ add_executable(microHorizonApp main.cpp
 							   
 target_link_libraries(microHorizonApp
 					  Tracer
-				      posInputWorker)
-					  #mapLoadWorker
+				      posInputWorker
+					  osmLoadWorker)
 					  #horizonGenerator)
 					  
 target_include_directories(microHorizonApp PUBLIC
