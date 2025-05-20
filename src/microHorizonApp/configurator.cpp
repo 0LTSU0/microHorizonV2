@@ -11,12 +11,19 @@ cmdArgs parseCMDArgs(int argc, char* argv[])
 	{
 		currArg = argv[i];
 
-		searchStr = "cfg=";
+		searchStr = "cfg="; // path to json config file
 		auto findPos = currArg.find(searchStr);
 		if (findPos != std::string::npos)
 		{
 			args.configPath = currArg.substr(findPos + searchStr.length());
 		}
+		searchStr = "timeout="; // timeout for how long the app should run for (currently needed because app has no method for shutting down)
+		findPos = currArg.find(searchStr);
+		if (findPos != std::string::npos)
+		{
+			args.appTimeOut = std::atoi(currArg.substr(findPos + searchStr.length()).c_str());
+		}
+		
 		searchStr = "someOtherArg"; // TODO: other args if necessary
 	}
 	return args;

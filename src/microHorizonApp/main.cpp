@@ -1,5 +1,7 @@
 #include <iostream>
 #include <memory>
+#include <thread>
+#include <chrono>
 
 #include <SharedData.h>
 #include <tracer.h>
@@ -20,9 +22,21 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
+	// Data structure to be shared betweewn threads
 	std::shared_ptr<sharedData::SharedData> sharedData = std::make_shared<sharedData::SharedData>();
 	
+	// Create and start threads
 	posInputWorker w_posInput(sharedData, appConfigurator.getPosMode(), appConfigurator.getUDPPort());
+	std::thread posInputThread(&posInputWorker::run, &w_posInput);
+	
+	//TODO: implement some method for quitting the app
+	Tracer::log("Sleep in main thread for seconds: " + std::to_string(args.appTimeOut), traceLevel::DEBUG);
+	std::this_thread::sleep_for(std::chrono::seconds(args.appTimeOut));
+	
+	//Shut down threads
+	Tracer::log("Setting sharedData->appIsRunning=false and waiting for workers to quit", traceLevel::INFO);
+	sharedData->appIsRunning = false;
+	posInputThread.join();
 
 	return 0;
 }

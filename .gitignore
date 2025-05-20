@@ -1,2 +1,4 @@
 *build*/
+**.plist
+*.vscode*
 !ThirdParty/**

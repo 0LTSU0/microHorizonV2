@@ -20,10 +20,23 @@
 
 namespace sharedData {
 
-struct inputPosition {
-	double lat;
-	double lon;
-	double heading;
+class inputPosition {
+public:
+	double lat = 0.0;
+	double lon = 0.0;
+	double heading = 0.0;
+	double speed = 0.0;
+	bool isValidObs() {
+		if (lat == 0.0 || lon == 0.0) // If coordinates at 0.0 then obs invalid for sure
+		{
+			return false;
+		}
+		if (heading < 0 || heading > 360) // heading should be in range of 0-360
+		{
+			return false;
+		}
+		return true;
+	};
 };
 
 struct RoadInfo {
@@ -37,10 +50,11 @@ struct SharedData {
 	std::queue<inputPosition> incomingPositions;
 	std::vector<RoadInfo> mapData;
 
-	int test_var = 0;
+	std::mutex inputPosMutex;
 
 	std::atomic<bool> initialValidPosReceived{ false };
 	std::atomic<bool> initialMapLoadDone{ false };
+	std::atomic<bool> appIsRunning{ true };
 };
 
 } // namespace sharedData

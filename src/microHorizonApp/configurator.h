@@ -9,7 +9,8 @@ using nlohmann::json;
 
 struct cmdArgs
 {
-	std::string configPath;
+	std::string configPath; // Path for json config file
+	int appTimeOut = 0; // Time after which app should quit
 };
 
 cmdArgs parseCMDArgs(int argc, char* argv[]);
