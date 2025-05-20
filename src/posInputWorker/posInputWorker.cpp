@@ -33,7 +33,7 @@ void posInputWorker::closeUDPSocket() // This should be called from destructor
 		closesocket(m_sockfd);
 		WSACleanup();
 #else
-		close(sockfd);
+		close(m_sockfd);
 #endif
 	}
 	m_sockfd = 0;
