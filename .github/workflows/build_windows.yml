@@ -1,0 +1,21 @@
+name: Build Windows
+on: 
+    push:
+        branches:
+            - main
+    workflow_dispatch:
+
+jobs:
+    Build:
+        runs-on: windows-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Temp ls checked out content
+              run: dir -R
+            
+            - name: Build project 
+              run: scripts/build_win.bat
+
+    #Test: TBD

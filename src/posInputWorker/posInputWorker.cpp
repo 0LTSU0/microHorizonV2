@@ -18,5 +18,5 @@ void posInputWorker::run()
 
 bool startUDPPosLoop()
 {
-
+	return true;
 }
