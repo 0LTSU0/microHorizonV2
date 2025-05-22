@@ -8,6 +8,7 @@
 #include <configurator.h>
 #include <posInputWorker.h>
 #include <RoadLoader.h>
+#include <horizonWorker.h>
 
 
 int main(int argc, char* argv[])
@@ -30,7 +31,10 @@ int main(int argc, char* argv[])
 	std::thread posInputThread(&posInputWorker::run, &w_posInput);
 	RoadLoader w_roadLoader(sharedData, appConfigurator.getLoadRadius(), appConfigurator.getMapPath());
 	std::thread roadLoaderThread(&RoadLoader::run, &w_roadLoader);
+	horizonWorker w_horizonGen(sharedData);
+	std::thread horizonGenThread(&horizonWorker::run, &w_horizonGen);
 	
+
 	//TODO: implement some method for quitting the app
 	Tracer::log("Sleep in main thread for seconds: " + std::to_string(args.appTimeOut), traceLevel::DEBUG);
 	std::this_thread::sleep_for(std::chrono::seconds(args.appTimeOut));
@@ -40,6 +44,7 @@ int main(int argc, char* argv[])
 	sharedData->appIsRunning = false;
 	posInputThread.join();
 	roadLoaderThread.join();
+	horizonGenThread.join();
 
 	return 0;
 }

@@ -14,7 +14,7 @@ void RoadLoader::run()
                 m_sharedata->roadLoaderState = sharedData::RoadLoaderState::LOADING_MAP;
             }
             bool res = loadMapData();
-            if (!res) { // loadMapData() returned false -> we didn't have input position to perform the load with -> keep uninitialized
+            if (!res) { // loadMapData() returned false -> we didn't have input position to perform the load with OR no roads were found around current position
                 std::lock_guard<std::mutex> guard(m_sharedata->roadLoaderStateMutex);
                 m_sharedata->roadLoaderState = sharedData::RoadLoaderState::NOT_INITIALIZED;
             }
@@ -33,19 +33,14 @@ void RoadLoader::run()
 
 bool RoadLoader::loadMapData()
 {
-    // If we have no input positions, return false which sets state to NOT_INITIALIZED
-    if (m_sharedata->incomingPositions.empty())
+    // Map data should not get triggered if this is the case, but just to make sure we don't try to load with invalid position
+    sharedData::inputPosition currPos = m_sharedata->lastProcessedPosition;
+    if (!currPos.isValidObs())
     {
-        Tracer::log("Cannot perform map load, no input positions in queue", traceLevel::WARNING);
         return false;
     }
     
     // Set bounding box around latest input position
-    sharedData::inputPosition currPos;
-    {
-        std::lock_guard<std::mutex> guard(m_sharedata->inputPosMutex);
-        currPos = m_sharedata->incomingPositions.back();
-    }
     m_loadBoundingBoxCenterLat = currPos.lat;
     m_loadBoundingBoxCenterLon = currPos.lon;
     setBoudningBox(currPos.lat, currPos.lon);
@@ -60,11 +55,18 @@ bool RoadLoader::loadMapData()
     std::lock_guard<std::mutex> guard(m_sharedata->mapDataMutex);
     m_sharedata->mapData = m_tmpRoadNetwork;
     Tracer::log("Map data load finished!", traceLevel::INFO);
-    return true;
+    return m_tmpRoadNetwork.size() > 0;
 }
 
 bool RoadLoader::mapDataLoadNeeded()
 {
+    sharedData::inputPosition lastProcPos = m_sharedata->lastProcessedPosition;
+    if (!lastProcPos.isValidObs())
+    {
+        Tracer::log("mapDataLoadNeeded() cannot deduce wheter map load is needed or not because last known position doesn't seem to be valid", traceLevel::WARNING);
+        return false;
+    }
+    
     // if no map load has been performed, we need it for sure
     if (!m_sharedata->initialMapLoadDone || m_sharedata->roadLoaderState == sharedData::RoadLoaderState::NOT_INITIALIZED)
     {
@@ -74,13 +76,11 @@ bool RoadLoader::mapDataLoadNeeded()
 
     // otherwise check if position has gone too far from previous map center
     float moveTreshold = m_loadRadius / 3;
-    std::lock_guard<std::mutex> guard(m_sharedata->inputPosMutex);
-    sharedData::inputPosition currPos = m_sharedata->incomingPositions.back();
     
-    if (std::fabs(currPos.lat - m_loadBoundingBoxCenterLat) > moveTreshold ||
-        std::fabs(currPos.lon - m_loadBoundingBoxCenterLon) > moveTreshold)
+    if (std::fabs(lastProcPos.lat - m_loadBoundingBoxCenterLat) > moveTreshold ||
+        std::fabs(lastProcPos.lon - m_loadBoundingBoxCenterLon) > moveTreshold)
     {
-        Tracer::log("Map data load needed: position has moved too far from old map center", traceLevel::INFO);
+        Tracer::log("Map data load needed: position has moved too far from loaded map center", traceLevel::INFO);
         return true;
     }
 

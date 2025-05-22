@@ -125,7 +125,6 @@ void posInputWorker::parseUDPMsg(std::string& rcvData)
 
 	if (newPos.isValidObs())
 	{
-		std::lock_guard<std::mutex> guard(m_sharedata->inputPosMutex);
 		m_sharedata->incomingPositions.push(newPos);
 	}
 }

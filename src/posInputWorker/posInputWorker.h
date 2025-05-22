@@ -16,7 +16,10 @@ public:
         : m_sharedata(data), 
           m_posMode(posMode),
           m_udpPosPrt(udpPort) { }
-    ~posInputWorker() { closeUDPSocket(); }
+    ~posInputWorker() { 
+        Tracer::log("posInputWorker destructor called", traceLevel::DEBUG); //temp to see if all components quit properly
+        closeUDPSocket(); 
+    }
     
     void run(); // Open UDP port or GNSS receiver reader and start receiving input data
 

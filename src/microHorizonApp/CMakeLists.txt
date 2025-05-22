@@ -5,8 +5,8 @@ add_executable(microHorizonApp main.cpp
 target_link_libraries(microHorizonApp
 					  Tracer
 				      posInputWorker
-					  osmLoadWorker)
-					  #horizonGenerator)
+					  osmLoadWorker
+					  horizonWorker)
 					  
 target_include_directories(microHorizonApp PUBLIC
 						   "${CMAKE_CURRENT_SOURCE_DIR}"

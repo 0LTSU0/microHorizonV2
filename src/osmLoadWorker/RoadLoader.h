@@ -13,6 +13,10 @@ public:
         : m_loadRadius(loadRadius),
           m_sharedata(data),
           m_mapPath(mapPath) {}
+    ~RoadLoader()
+    {
+        Tracer::log("RoadLoader destructor called", traceLevel::DEBUG); //temp to see if all components quit properly
+    }
     
     void way(const osmium::Way& way); // see ThirdParty/libosmium-2.20.0/include/osmium/handler.hpp
     

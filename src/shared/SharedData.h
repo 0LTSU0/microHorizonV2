@@ -56,7 +56,6 @@ struct SharedData {
 	std::queue<inputPosition> incomingPositions;
 	std::vector<RoadInfo> mapData;
 
-	std::mutex inputPosMutex;
 	std::mutex mapDataMutex;
 	std::mutex roadLoaderStateMutex;
 
@@ -64,6 +63,7 @@ struct SharedData {
 	std::atomic<bool> initialMapLoadDone{ false };
 	std::atomic<bool> appIsRunning{ true };
 	std::atomic<RoadLoaderState> roadLoaderState{ RoadLoaderState::NOT_INITIALIZED };
+	std::atomic<inputPosition> lastProcessedPosition;
 };
 
 } // namespace sharedData
