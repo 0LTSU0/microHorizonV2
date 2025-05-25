@@ -2,7 +2,9 @@
 
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
+
+#note to self: DCMAKE_INSTALL_PREFIX needed to override some install paths from thirdparty components
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install ..
 if [ $? -ne 0 ]; then
   echo "CMake configuration failed!"
   exit 1
@@ -15,4 +17,7 @@ if [ $? -ne 0 ]; then
 fi
 
 ls -R
+
+cmake --install . --prefix ../install
+
 exit 0

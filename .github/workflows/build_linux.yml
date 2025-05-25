@@ -15,8 +15,11 @@ jobs:
             - name: chmod
               run: chmod +x scripts/build_linux.sh
             
-            - name: Build project 
+            - name: Build 
               run: scripts/build_linux.sh
+              
+            - name: Run tests
+              run: scripts/run_test_linux.sh
             
             - name: Store artifacts
               uses: actions/upload-artifact@v4

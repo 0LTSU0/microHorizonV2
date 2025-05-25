@@ -7,3 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(ThirdParty)
 add_subdirectory(src)
 add_subdirectory(test)
+
+#set which targets to install
+install(TARGETS microHorizonApp
+        RUNTIME DESTINATION bin)
+install(TARGETS test_horizonWorker
+        RUNTIME DESTINATION bin)
