@@ -3,8 +3,15 @@
 #include <numbers>
 #include <tracer.h>
 #include <string>
+#include <cmath>
 
+double toRad(double degrees) {
+	return degrees * (std::numbers::pi / 180);
+}
 
+double toDeg(double rads) {
+	return rads * (180 / std::numbers::pi);
+}
 
 double distance(const Point& a, const Point& b) {
 	return sqrt(pow(a.lat - b.lat, 2) + pow(a.lon - b.lon, 2));
@@ -29,6 +36,51 @@ double pointToSegmentDistance(const sharedData::inputPosition& p, const Segment&
 
 	Point projection = { x1 + t * dx, y1 + t * dy };
 	return distance(ip, projection);
+}
+
+static double calculateHeading(double lat1rad, double lon1rad, double lat2rad, double lon2rad) {
+	double delta_lon = lon2rad - lon1rad;
+	double x = std::sin(delta_lon) * std::cos(lat2rad);
+	double y = std::cos(lat1rad) * std::sin(lat2rad) - std::sin(lat1rad) * std::cos(lat2rad) * std::cos(delta_lon);
+	double initialBearing = toDeg(std::atan2(x, y));
+	return std::fmod(initialBearing + 360, 360);
+}
+
+/*
+When positive Y axis corresponds to heading 0, this calculates the "heading" of given segment
+in both ways as there really isn't a way to know which way a road is modelled in OSM data 
+and we might be driving along it to either direction.
+
+TODO: Check if this math actually makes any sense... When you plot latlon coordinates on 2d surface,
+the result is quite distored and I'm not sure if this accounts for that. This logic is same as
+plist_to_udp_sender.py but that might be incorrect also. The answer really depends on how GPS receivers work...
+*/
+static std::pair<double, double> calculateSegmentHeadings(const Segment &segment) {
+	auto lat_start_1 = toRad(segment.start.lat);
+	auto lon_start_1 = toRad(segment.start.lon);
+	auto lat_end_1 = toRad(segment.end.lat);
+	auto lon_end_1 = toRad(segment.end.lon);
+	auto headingCandidate1 = calculateHeading(lat_start_1, lon_start_1, lat_end_1, lon_end_1);
+	double headingCandidate2 = 0.0;
+
+	// the other option is 180 degrees less or more
+	if (headingCandidate1 > 180) {
+		headingCandidate2 = headingCandidate1 - 180;
+	}
+	else {
+		headingCandidate2 = headingCandidate2 + 180;
+	}
+
+	return { headingCandidate1, headingCandidate2 };
+}
+
+static double getSmallestHeadingDiff(const std::pair<double, double>& segHeadings, const sharedData::inputPosition& pos) {
+	double diff1 = std::fabs(segHeadings.first - pos.heading);
+	double diff2 = std::fabs(segHeadings.second - pos.heading);
+	if (diff1 < diff2) {
+		return diff1;
+	}
+	return diff2;
 }
 
 /* 
@@ -101,14 +153,25 @@ sharedData::RoadInfo matchPosition(const sharedData::inputPosition& pos, std::sh
 
 /*
 As the main matchPosition() implementation, this needs to be improved. Currently only chooses 
-the one that aligns better with the heading of our input position
+the one that aligns better with the heading of our input position OR if the heading correspondances
+are very close (i.e. there are two parellel roads, then it chooses the nearer one.
 */
 sharedData::RoadInfo chooseFromTwoBestCandidates(const sharedData::inputPosition& pos, const Segment& bestSeg, const Segment& secondSeg, const sharedData::RoadInfo& bestRoad, const sharedData::RoadInfo& secondRoad)
 {
-	pos;
+	auto bestSegHeadings = calculateSegmentHeadings(bestSeg);
+	auto secondBestHeadings = calculateSegmentHeadings(secondSeg);
+	double headingDiffToBest = getSmallestHeadingDiff(bestSegHeadings, pos);
+	double headingDiffToSecond = getSmallestHeadingDiff(secondBestHeadings, pos);
+
+	// if difference between best and second best diffs is less than 10degrees, return the road that was better according to distance
+	if (std::fabs(headingDiffToBest - headingDiffToSecond) < 10) {
+		return bestRoad;
+	}
+
+	if (headingDiffToBest > headingDiffToSecond) {
+		return secondRoad;
+	}
 	return bestRoad;
-
-
 }
 
 bool isRoadInfoValid(const sharedData::RoadInfo& road)
