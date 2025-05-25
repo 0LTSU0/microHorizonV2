@@ -6,14 +6,14 @@ on:
     workflow_dispatch:
 
 jobs:
-    Build:
+    Build_and_run_tests:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
               uses: actions/checkout@v4
             
             - name: chmod
-              run: chmod +x scripts/build_linux.sh
+              run: chmod +x -R scripts
             
             - name: Build 
               run: scripts/build_linux.sh
