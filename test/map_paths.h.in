@@ -1,0 +1,2 @@
+#define MAP_SIMPLE_NEAR_HAUKIPUDAS "@CMAKE_CURRENT_SOURCE_DIR@/map_data/simple_near_haukipudas.osm"
+#define MAP_COMPLEX_OULU_CENTER "@CMAKE_CURRENT_SOURCE_DIR@/map_data/complex_oulu_citycenter.osm"

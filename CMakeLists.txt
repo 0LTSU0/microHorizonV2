@@ -11,5 +11,5 @@ add_subdirectory(test)
 #set which targets to install
 install(TARGETS microHorizonApp
         RUNTIME DESTINATION bin)
-install(TARGETS test_horizonWorker
+install(TARGETS test_microHorizon
         RUNTIME DESTINATION bin)
