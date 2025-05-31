@@ -31,11 +31,3 @@ RUN apt-get update && \
     libxcb-randr0-dev \
     libxcb-image0-dev && \
     apt-get --fix-broken install
-
-#setup user for GHA
-RUN useradd -m -s /bin/bash runner
-RUN mkdir -p /__w && chown -R runner:runner /__w
-USER runner
-WORKDIR /__w
-
-SHELL ["/bin/bash", "-c"]
