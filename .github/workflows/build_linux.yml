@@ -8,6 +8,11 @@ on:
 jobs:
     Build_and_run_tests:
         runs-on: ubuntu-latest
+        container:
+          image: ghcr.io/0ltsu0/linux_x64_build_docker:latest
+          credentials:
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
         steps:
             - name: Checkout
               uses: actions/checkout@v4
