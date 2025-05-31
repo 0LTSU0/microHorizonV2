@@ -89,6 +89,22 @@ bool MHConfigurator::loadConfig(std::string &confPath)
 		return false;
 	}
 
+	// frontEnd configs
+	if (conf.contains("frontEndUpdateintervalS") && conf.contains("frontEndMode"))
+	{
+		c_frontEndUpdateInterval = conf["frontEndUpdateintervalS"].get<float>();
+		if (conf["frontEndMode"].get<std::string>() == "fancy")
+		{
+			c_fronEndMode = frontEndMode::FANCY;
+		}
+		else if (conf["frontEndMode"].get<std::string>() == "raspi") {
+			c_fronEndMode = frontEndMode::RASPI;
+		}
+		else {
+			c_fronEndMode = frontEndMode::NONE;
+		}
+	}
+
 	// writeDebugDumps. When on, e.g. position matcher writes some debuug jsons with candidates for debugging. Default False
 	if (conf.contains("writeDebugDumps"))
 	{
@@ -121,6 +137,16 @@ int MHConfigurator::getUDPPort()
 bool MHConfigurator::getWriteDebugDumps()
 {
 	return c_writeDebugDumps;
+}
+
+float MHConfigurator::getFEUpdateFreq()
+{
+	return c_frontEndUpdateInterval;
+}
+
+frontEndMode MHConfigurator::getFEMode() 
+{
+	return c_fronEndMode;
 }
 
 bool MHConfigurator::loadUDPSpecificConfs(json& conf)

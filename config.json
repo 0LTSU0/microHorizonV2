@@ -3,5 +3,7 @@
 	"posMode": "UDP",
 	"UDPPosPort": 12364,
 	"loadRadius": 2,
-	"writeDebugDumps": false
+	"writeDebugDumps": false,
+	"frontEndMode": "fancy",
+	"frontEndUpdateintervalS": 1
 }

@@ -40,7 +40,14 @@ bool horizonWorker::generateHorizonGraph(const sharedData::inputPosition& pos)
 	if (!isRoadInfoValid(currentRoad))
 	{
 		return false;
+		m_shareData->outputHorizonDataAvailable = false;
 	}
+
+	m_shareData->outputHorizonDataAvailable = true;
+	m_shareData->horizonDataLock.lock();
+	m_shareData->horizonPositon.inputPos = pos;
+	m_shareData->horizonPositon.currentRoad = currentRoad;
+	m_shareData->horizonDataLock.unlock();
 
 	return true;
 }

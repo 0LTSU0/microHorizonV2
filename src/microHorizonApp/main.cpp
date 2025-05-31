@@ -9,7 +9,7 @@
 #include <posInputWorker.h>
 #include <RoadLoader.h>
 #include <horizonWorker.h>
-
+#include <fancyFrontEnd.h>
 
 int main(int argc, char* argv[])
 {
@@ -33,7 +33,18 @@ int main(int argc, char* argv[])
 	std::thread roadLoaderThread(&RoadLoader::run, &w_roadLoader);
 	horizonWorker w_horizonGen(sharedData);
 	std::thread horizonGenThread(&horizonWorker::run, &w_horizonGen);
-	
+	fancyFrontEndWorker w_fancyFrontend(sharedData, appConfigurator.getFEUpdateFreq());
+	std::thread frontEndThread;
+	switch (appConfigurator.getFEMode())
+	{
+	case frontEndMode::FANCY:
+		frontEndThread = std::thread(&fancyFrontEndWorker::run, &w_fancyFrontend);
+		break;
+	case frontEndMode::RASPI:
+		break;
+	default:
+		break;
+	}
 
 	//TODO: implement some method for quitting the app
 	Tracer::log("Sleep in main thread for seconds: " + std::to_string(args.appTimeOut), traceLevel::DEBUG);
@@ -45,6 +56,9 @@ int main(int argc, char* argv[])
 	posInputThread.join();
 	roadLoaderThread.join();
 	horizonGenThread.join();
+	if (frontEndThread.joinable()) {
+		frontEndThread.join();
+	}
 
 	return 0;
 }

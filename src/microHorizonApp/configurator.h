@@ -15,6 +15,12 @@ struct cmdArgs
 
 cmdArgs parseCMDArgs(int argc, char* argv[]);
 
+enum frontEndMode {
+	NONE,
+	FANCY,
+	RASPI
+};
+
 class MHConfigurator
 {
 public:
@@ -24,6 +30,8 @@ public:
 	int getUDPPort();
 	float getLoadRadius();
 	bool getWriteDebugDumps();
+	float getFEUpdateFreq();
+	frontEndMode getFEMode();
 
 private:
 	std::string c_mapPath = "";
@@ -31,6 +39,8 @@ private:
 	int c_udpPort = 0;
 	float c_loadRadius = 0.5; //radius in degrees (latlon) that is loaded around requested coordinates by OSMProcessor
 	bool c_writeDebugDumps = false;
+	float c_frontEndUpdateInterval = 1; //in seconds
+	frontEndMode c_fronEndMode = frontEndMode::NONE;
 
 	bool loadUDPSpecificConfs(json& conf);
 	bool loadGPSSpecificConfs(json& conf);

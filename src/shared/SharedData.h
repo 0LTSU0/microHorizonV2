@@ -52,16 +52,31 @@ enum RoadLoaderState {
 	IDLE
 };
 
+struct childPath {
+	std::vector<RoadInfo> childPaths;
+	RoadInfo subPath;
+};
+
+// struct to represent the horizon matched position
+struct h_position {
+	inputPosition inputPos; // input position that resulted in other data of this struct
+	RoadInfo currentRoad;
+	std::vector<childPath> childPaths;
+};
+
 struct SharedData {
 	std::queue<inputPosition> incomingPositions;
 	std::vector<RoadInfo> mapData;
+	h_position horizonPositon;
 
-	std::mutex mapDataMutex;
-	std::mutex roadLoaderStateMutex;
+	std::mutex mapDataMutex; // Lock when touching mapData
+	std::mutex roadLoaderStateMutex; // Lock when changing roadLoaderState TODO: remove (its already atomic)
+	std::mutex horizonDataLock; // Lock when touching "output" horizon data e.g. horizonPositon
 
 	std::atomic<bool> initialValidPosReceived{ false };
 	std::atomic<bool> initialMapLoadDone{ false };
 	std::atomic<bool> appIsRunning{ true };
+	std::atomic<bool> outputHorizonDataAvailable{ false }; // Set to true when first output horizon is generated. If position matching fails later, changes back to false
 	std::atomic<RoadLoaderState> roadLoaderState{ RoadLoaderState::NOT_INITIALIZED };
 	std::atomic<inputPosition> lastProcessedPosition;
 };

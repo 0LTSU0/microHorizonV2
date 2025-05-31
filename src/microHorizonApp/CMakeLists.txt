@@ -6,7 +6,8 @@ target_link_libraries(microHorizonApp
 					  Tracer
 				      posInputWorker
 					  osmLoadWorker
-					  horizonWorker) 
+					  horizonWorker
+					  fancyFrontEnd) 
 					  
 if (UNIX)
 	#TODO: check why linux build fails wihtout link to atomic
