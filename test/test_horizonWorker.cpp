@@ -53,8 +53,7 @@ public:
 
             RoadInfo roadInfo{
                 way.id(),
-                way.tags().get_value_by_key("name", "Unnamed Road"),
-                highway_tag,
+                {way.tags().get_value_by_key("name", "Unnamed Road"), highway_tag, way.tags().get_value_by_key("maxspeed", "N/A")},
                 road_nodes
             };
 
@@ -157,8 +156,8 @@ TEST_F(HorizonGeneratorTests, chooseFromTwoBestCandidatest1) {
     
     RoadInfo roadCorrect;
     RoadInfo roadWrong;
-    roadCorrect.name = "Correct road";
-    roadWrong.name = "Wrong road";
+    roadCorrect.attributes.name = "Correct road";
+    roadWrong.attributes.name = "Wrong road";
     roadCorrect.id = 1;
     roadWrong.id = 69;
 
@@ -168,7 +167,7 @@ TEST_F(HorizonGeneratorTests, chooseFromTwoBestCandidatest1) {
     RoadInfo res = chooseFromTwoBestCandidates(inputPos, segmentCorrect, segmentWrong, roadCorrect, roadWrong);
 
     EXPECT_EQ(res.id, roadCorrect.id);
-    EXPECT_EQ(res.name, roadCorrect.name);
+    EXPECT_EQ(res.attributes.name, roadCorrect.attributes.name);
 }
 
 // Position in intersection, correct road should be chosen based on heading
@@ -182,8 +181,8 @@ TEST_F(HorizonGeneratorTests, chooseFromTwoBestCandidatest2) {
 
     RoadInfo roadCorrect;
     RoadInfo roadWrong;
-    roadCorrect.name = "Correct road";
-    roadWrong.name = "Wrong road";
+    roadCorrect.attributes.name = "Correct road";
+    roadWrong.attributes.name = "Wrong road";
     roadCorrect.id = 1;
     roadWrong.id = 69;
 
@@ -193,7 +192,7 @@ TEST_F(HorizonGeneratorTests, chooseFromTwoBestCandidatest2) {
     RoadInfo res = chooseFromTwoBestCandidates(inputPos, segmentCorrect, segmentWrong, roadCorrect, roadWrong);
 
     EXPECT_EQ(res.id, roadCorrect.id);
-    EXPECT_EQ(res.name, roadCorrect.name);
+    EXPECT_EQ(res.attributes.name, roadCorrect.attributes.name);
 }
 
 // Two parellel roads. Position is closer to correctRoad/segmentCorrect -> heading stuff should be ignored
@@ -206,8 +205,8 @@ TEST_F(HorizonGeneratorTests, chooseFromTwoBestCandidatest3) {
 
     RoadInfo roadCorrect;
     RoadInfo roadWrong;
-    roadCorrect.name = "Correct road";
-    roadWrong.name = "Wrong road";
+    roadCorrect.attributes.name = "Correct road";
+    roadWrong.attributes.name = "Wrong road";
     roadCorrect.id = 1;
     roadWrong.id = 69;
 
@@ -217,5 +216,5 @@ TEST_F(HorizonGeneratorTests, chooseFromTwoBestCandidatest3) {
     RoadInfo res = chooseFromTwoBestCandidates(inputPos, segmentCorrect, segmentWrong, roadCorrect, roadWrong);
 
     EXPECT_EQ(res.id, roadCorrect.id);
-    EXPECT_EQ(res.name, roadCorrect.name);
+    EXPECT_EQ(res.attributes.name, roadCorrect.attributes.name);
 }

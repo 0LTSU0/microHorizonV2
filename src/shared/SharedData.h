@@ -39,10 +39,15 @@ public:
 	};
 };
 
-struct RoadInfo {
-	osmium::object_id_type id;
+struct RoadAttributes {
 	std::string name;
 	std::string highway_type;
+	std::string speedLimit;
+};
+
+struct RoadInfo {
+	osmium::object_id_type id;
+	RoadAttributes attributes;
 	std::vector<osmium::Location> nodes;
 };
 

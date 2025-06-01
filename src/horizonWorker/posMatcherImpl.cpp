@@ -135,8 +135,8 @@ sharedData::RoadInfo matchPosition(const sharedData::inputPosition& pos, std::sh
 			}
 
 			if (iterChangedResults) {
-				Tracer::log("Closest road is now: " + bestMatch.name + ", id: " + std::to_string(bestMatch.id) + ", dist: " + std::to_string(bestMatchMatchingDist) + 
-					" | Second closest road is now: " + secondBestMatch.name + ", id: " + std::to_string(secondBestMatch.id) + ", dist: " + std::to_string(secondBestMatchMatchingDist),
+				Tracer::log("Closest road is now: " + bestMatch.attributes.name + ", id: " + std::to_string(bestMatch.id) + ", dist: " + std::to_string(bestMatchMatchingDist) + 
+					" | Second closest road is now: " + secondBestMatch.attributes.name + ", id: " + std::to_string(secondBestMatch.id) + ", dist: " + std::to_string(secondBestMatchMatchingDist),
 					traceLevel::DEBUG);
 			}
 		}
