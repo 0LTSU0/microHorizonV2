@@ -30,18 +30,22 @@ void fancyFrontEndWorker::run() {
 		auto currentTS = std::chrono::duration_cast<std::chrono::milliseconds>(
 			std::chrono::system_clock::now().time_since_epoch());
 		if (currentTS < nextRenderTs){
-			m_window.display(); //I guess this needs to be called for fps limit to work
+			// TODO: figure out how to prevent not having to render the window on every iteration. If I don't do anything here,
+			// then the fps limit does not work and this loop runs fast as fuck taking up cpu. If I call m_window.display() then
+			// the image is flickering because of some stupid crap about opengl flipping buffers... Anyway for now need to render
+			// the window on every iteration even though the content only updates every m_updateIntervalS.
+			drawCurrentWindow();
 			continue;
 		}
 		
 		renderStartTS = std::chrono::duration_cast<std::chrono::milliseconds>(
 			std::chrono::system_clock::now().time_since_epoch());
-		if (m_shareData->outputHorizonDataAvailable)
+		if (m_shareData->outputHorizonDataAvailable || true) //REMOVE TMP TRUE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		{
-			drawCurrentHorizon();
+			
+			prepareCurrentWindow();
+			drawCurrentWindow();
 		}
-
-		m_window.display();
 
 		// next render timestamp is "current epoch" + "target interval" - "what was spent doing current render"
 		renderEndTS = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -51,6 +55,31 @@ void fancyFrontEndWorker::run() {
 }
 
 
-void fancyFrontEndWorker::drawCurrentHorizon() {
+void fancyFrontEndWorker::prepareCurrentWindow() {
+	m_windowContent.roads.clear(); //clear old content form the content vector
+	m_windowContent.texts.clear();
+
 	// draw scene
+	renderedRoad r;
+	r.roadID = 12345;
+	r.roadPoints.push_back(sf::Vertex{ sf::Vector2f(10.f, 10.f), sf::Color::Blue });
+	r.roadPoints.push_back(sf::Vertex{ sf::Vector2f(150.f, 150.f), sf::Color::Blue });
+	r.roadPoints.push_back(sf::Vertex{ sf::Vector2f(150.f, 200.f), sf::Color::Blue });
+	m_windowContent.roads.push_back(r);
+}
+
+void fancyFrontEndWorker::drawCurrentWindow() {
+	m_window.clear();
+
+	// loop all roads and draw them
+	for (auto& r : m_windowContent.roads)
+	{
+		m_window.draw(r.roadPoints.data(), r.roadPoints.size(), sf::PrimitiveType::LineStrip);
+	}
+	std::vector<sf::Vertex> test;
+	test.push_back(sf::Vertex{ sf::Vector2f(30.f, 300.f), sf::Color::Green });
+	test.push_back(sf::Vertex{ sf::Vector2f(30.f, 600.f), sf::Color::Green });
+	test.push_back(sf::Vertex{ sf::Vector2f(300.f, 300.f), sf::Color::Green });
+	m_window.draw(test.data(), test.size(), sf::PrimitiveType::LineStrip);
+	m_window.display();
 }
