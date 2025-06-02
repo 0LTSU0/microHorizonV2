@@ -39,7 +39,9 @@ public:
 private:
     void prepareCurrentWindow();
     void drawCurrentWindow();
+    void drawSubpathsOfARoad(sharedData::RoadInfo&);
     
+    sf::Vector2u m_screenCenter;
     std::shared_ptr<sharedData::SharedData> m_shareData;
     float m_updateIntervalS;
     std::string m_fontPath;

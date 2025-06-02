@@ -3,6 +3,8 @@
 #include <iostream>
 #include <thread>
 
+#include <FEHelpers.h>
+
 void fancyFrontEndWorker::run() {
 	std::chrono::milliseconds nextRenderTs = std::chrono::milliseconds(0);
 	auto targetSleepInterval = std::chrono::milliseconds(static_cast<int>(std::round(m_updateIntervalS * 1000)));
@@ -56,6 +58,7 @@ void fancyFrontEndWorker::prepareCurrentWindow() {
 	m_windowContent.roads.clear(); //clear old content form the content vector
 	m_windowContent.texts.clear();
 	const auto* hpptr = &m_shareData->horizonPositon;
+	m_screenCenter = { m_window.getSize().x / 2 , m_window.getSize().y / 2 };
 
 	// write some text stuff
 	sf::Text mapLoaderState(m_font);
@@ -76,17 +79,22 @@ void fancyFrontEndWorker::prepareCurrentWindow() {
 	sf::Text currentPos(m_font);
 	currentPos.setString("Current position: " + std::to_string(hpptr->inputPos.lat) + "," + std::to_string(hpptr->inputPos.lon));
 	m_windowContent.texts.push_back(currentPos);
+	sf::Text currentRoadName(m_font);
+	currentRoadName.setString("Current road: " + hpptr->currentRoad.attributes.name);
+	m_windowContent.texts.push_back(currentRoadName);
 	sf::Text currentRoadInfo(m_font);
-	currentRoadInfo.setString("Current road: " + hpptr->currentRoad.attributes.name + ", SL: " + hpptr->currentRoad.attributes.speedLimit);
+	currentRoadInfo.setString("Current attributes: Speed Limit - " + hpptr->currentRoad.attributes.speedLimit + " | Road type - " + hpptr->currentRoad.attributes.highway_type);
 	m_windowContent.texts.push_back(currentRoadInfo);
 
 	// draw roads (only if there is some data available according to horizon generator
+	std::pair<float, float> transformedPts;
 	if (m_shareData->outputHorizonDataAvailable) {
 		renderedRoad r;
 		r.roadID = hpptr->currentRoad.id;
 		for (const auto& node : hpptr->currentRoad.nodes)
 		{
-			r.roadPoints.push_back(sf::Vertex{ sf::Vector2f(node.lon(), node.lat()), sf::Color::Green });
+			transformedPts = latLonTo2d(node.lat(), node.lon(), hpptr->inputPos.lat, hpptr->inputPos.lon);
+			r.roadPoints.push_back(sf::Vertex{ sf::Vector2f(transformedPts.first + m_screenCenter.x, transformedPts.second + m_screenCenter.y), sf::Color::Green });
 		}
 		m_windowContent.roads.push_back(r);
 		for (const auto& path : hpptr->childPaths)
@@ -94,7 +102,8 @@ void fancyFrontEndWorker::prepareCurrentWindow() {
 			renderedRoad rs;
 			for (const auto& node : path.subPath.nodes)
 			{
-				rs.roadPoints.push_back(sf::Vertex{ sf::Vector2f(node.lon(), node.lat()), sf::Color::White });
+				transformedPts = latLonTo2d(node.lat(), node.lon(), hpptr->inputPos.lat, hpptr->inputPos.lon);
+				rs.roadPoints.push_back(sf::Vertex{ sf::Vector2f(transformedPts.first + m_screenCenter.x, transformedPts.second + m_screenCenter.y), sf::Color::White });
 			}
 			m_windowContent.roads.push_back(rs);
 		}
@@ -102,9 +111,18 @@ void fancyFrontEndWorker::prepareCurrentWindow() {
 	
 }
 
+
 void fancyFrontEndWorker::drawCurrentWindow() {
 	m_window.clear();
 
+	// assuming math in prepareCurrentWindow is mathing then car is at the center of our screen
+	sf::CircleShape carMarker;
+	carMarker.setRadius(5);
+	carMarker.setPosition(static_cast<sf::Vector2f>(m_screenCenter));
+	carMarker.setOrigin({ 5, 5 });
+	carMarker.setFillColor(sf::Color::Red);
+	m_window.draw(carMarker);
+	
 	// loop all roads and draw them TODO: scale so thay actually show up in the output
 	for (auto& r : m_windowContent.roads)
 	{

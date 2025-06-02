@@ -1,6 +1,8 @@
 set(srcs
 	fancyFrontEnd.h
-	fancyFrontEnd.cpp)
+	fancyFrontEnd.cpp
+	FEHelpers.h
+	FEHelpers.cpp)
 
 add_library(fancyFrontEnd ${srcs})
 target_include_directories(fancyFrontEnd PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

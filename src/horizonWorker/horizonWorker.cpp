@@ -49,6 +49,38 @@ bool horizonWorker::generateHorizonGraph(const sharedData::inputPosition& pos)
 	m_shareData->horizonPositon.currentRoad = currentRoad;
 	m_shareData->horizonDataLock.unlock();
 
+	generateSubPathsForRoad(currentRoad);
+
 	return true;
 }
 
+// TODO: we should probably instead of doing this keep track of some kind of "node to way" dict
+// when performing map load because looping through EVERYTHING is quite slow
+void horizonWorker::generateSubPathsForRoad(sharedData::RoadInfo& thisRoad)
+{
+	m_shareData->horizonDataLock.lock();
+	m_shareData->mapDataMutex.lock();
+	m_shareData->horizonPositon.childPaths.clear();
+	for (auto& node : thisRoad.nodes)
+	{
+		for (auto& road : m_shareData->mapData)
+		{
+			bool roadIsSubRoad = false;
+			for (auto& subnode : road.nodes)
+			{
+				if (node == subnode && thisRoad.id != road.id)
+				{
+					roadIsSubRoad = true;
+					break;
+				}
+			}
+			if (roadIsSubRoad)
+			{
+				auto child = sharedData::childPath({}, road);
+				m_shareData->horizonPositon.childPaths.push_back(child);
+			}
+		}
+	}
+	m_shareData->mapDataMutex.unlock();
+	m_shareData->horizonDataLock.unlock();
+}
