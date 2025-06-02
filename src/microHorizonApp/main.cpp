@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 	std::thread roadLoaderThread(&RoadLoader::run, &w_roadLoader);
 	horizonWorker w_horizonGen(sharedData);
 	std::thread horizonGenThread(&horizonWorker::run, &w_horizonGen);
-	fancyFrontEndWorker w_fancyFrontend(sharedData, appConfigurator.getFEUpdateFreq());
+	fancyFrontEndWorker w_fancyFrontend(sharedData, appConfigurator.getFEUpdateFreq(), appConfigurator.getFontPath());
 	std::thread frontEndThread;
 	switch (appConfigurator.getFEMode())
 	{

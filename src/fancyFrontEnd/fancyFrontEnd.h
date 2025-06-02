@@ -21,8 +21,11 @@ struct windowCont {
 
 class fancyFrontEndWorker {
 public:
-    fancyFrontEndWorker(std::shared_ptr<sharedData::SharedData> data, float updateInterval)
-        : m_shareData(data), m_updateIntervalS(updateInterval){
+    fancyFrontEndWorker(std::shared_ptr<sharedData::SharedData> data, float updateInterval, std::string fontPath)
+        : m_shareData(data), m_updateIntervalS(updateInterval), m_fontPath(fontPath){
+        if (!m_font.openFromFile(fontPath)) {
+            Tracer::log("FancyFrontEnd failed to open font from: " + fontPath, traceLevel::ERROR);
+        }
     }
     ~fancyFrontEndWorker() {
         Tracer::log("fancyFrontEndWorker destructor called", traceLevel::DEBUG); //temp to see if all components quit properly
@@ -39,6 +42,8 @@ private:
     
     std::shared_ptr<sharedData::SharedData> m_shareData;
     float m_updateIntervalS;
+    std::string m_fontPath;
     sf::RenderWindow m_window;
+    sf::Font m_font;
     windowCont m_windowContent;
 };

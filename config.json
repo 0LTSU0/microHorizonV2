@@ -5,5 +5,6 @@
 	"loadRadius": 2,
 	"writeDebugDumps": false,
 	"frontEndMode": "fancy",
-	"frontEndUpdateintervalS": 1
+	"frontEndUpdateintervalS": 1,
+	"fancyFrontEndFontLocation": "Z:/0xPropo-Medium.ttf"
 }

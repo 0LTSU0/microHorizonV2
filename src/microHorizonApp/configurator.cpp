@@ -105,6 +105,15 @@ bool MHConfigurator::loadConfig(std::string &confPath)
 		}
 	}
 
+	// the so called fancy frontend needs a path to some .ttf font to work
+	if (c_fronEndMode == frontEndMode::FANCY)
+	{
+		if (!conf.contains("fancyFrontEndFontLocation")) {
+			return false;
+		}
+		c_feFontPath = conf["fancyFrontEndFontLocation"].get<std::string>();
+	}
+
 	// writeDebugDumps. When on, e.g. position matcher writes some debuug jsons with candidates for debugging. Default False
 	if (conf.contains("writeDebugDumps"))
 	{
@@ -147,6 +156,11 @@ float MHConfigurator::getFEUpdateFreq()
 frontEndMode MHConfigurator::getFEMode() 
 {
 	return c_fronEndMode;
+}
+
+std::string MHConfigurator::getFontPath() 
+{
+	return c_feFontPath;
 }
 
 bool MHConfigurator::loadUDPSpecificConfs(json& conf)

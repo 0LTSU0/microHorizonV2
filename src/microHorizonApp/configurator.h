@@ -32,6 +32,7 @@ public:
 	bool getWriteDebugDumps();
 	float getFEUpdateFreq();
 	frontEndMode getFEMode();
+	std::string getFontPath();
 
 private:
 	std::string c_mapPath = "";
@@ -41,6 +42,7 @@ private:
 	bool c_writeDebugDumps = false;
 	float c_frontEndUpdateInterval = 1; //in seconds
 	frontEndMode c_fronEndMode = frontEndMode::NONE;
+	std::string c_feFontPath = "";
 
 	bool loadUDPSpecificConfs(json& conf);
 	bool loadGPSSpecificConfs(json& conf);

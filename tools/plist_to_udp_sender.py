@@ -12,7 +12,7 @@ def read_file(file):
         plist_data = plistlib.load(plist_file)
     return plist_data
 
-def send_positions(positions, ip, port, mode):
+def send_positions(positions, ip, port, mode, loop=False):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     prevPos = None
     for pos in reversed(positions): 
@@ -30,6 +30,8 @@ def send_positions(positions, ip, port, mode):
             time.sleep(SEND_FREQ)
         elif mode == "manual":
             input("Press enter to send next position")
+    if loop:
+        send_positions(positions, ip, port, mode, loop)
 
 def get_heading_estimate(ppos, cpos):
     lat1 = math.radians(ppos["gpsLatitude"])
@@ -51,8 +53,9 @@ if __name__ == "__main__":
     argparser.add_argument("--host", type=str)
     argparser.add_argument("--file", type=str)
     argparser.add_argument("--mode", type=str, default="auto")
+    argparser.add_argument("--infinite", action="store_true")
     args = argparser.parse_args()
     if args.mode != "auto" and args.mode != "manual":
         sys.exit()
     posdata = read_file(args.file)
-    send_positions(posdata.get("gpsRecords", []), args.host, args.port, args.mode)
+    send_positions(posdata.get("gpsRecords", []), args.host, args.port, args.mode, args.infinite)

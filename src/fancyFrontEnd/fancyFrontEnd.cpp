@@ -40,12 +40,9 @@ void fancyFrontEndWorker::run() {
 		
 		renderStartTS = std::chrono::duration_cast<std::chrono::milliseconds>(
 			std::chrono::system_clock::now().time_since_epoch());
-		if (m_shareData->outputHorizonDataAvailable || true) //REMOVE TMP TRUE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		{
-			
-			prepareCurrentWindow();
-			drawCurrentWindow();
-		}
+
+		prepareCurrentWindow();
+		drawCurrentWindow();
 
 		// next render timestamp is "current epoch" + "target interval" - "what was spent doing current render"
 		renderEndTS = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -58,28 +55,70 @@ void fancyFrontEndWorker::run() {
 void fancyFrontEndWorker::prepareCurrentWindow() {
 	m_windowContent.roads.clear(); //clear old content form the content vector
 	m_windowContent.texts.clear();
+	const auto* hpptr = &m_shareData->horizonPositon;
 
-	// draw scene
-	renderedRoad r;
-	r.roadID = 12345;
-	r.roadPoints.push_back(sf::Vertex{ sf::Vector2f(10.f, 10.f), sf::Color::Blue });
-	r.roadPoints.push_back(sf::Vertex{ sf::Vector2f(150.f, 150.f), sf::Color::Blue });
-	r.roadPoints.push_back(sf::Vertex{ sf::Vector2f(150.f, 200.f), sf::Color::Blue });
-	m_windowContent.roads.push_back(r);
+	// write some text stuff
+	sf::Text mapLoaderState(m_font);
+	switch (m_shareData->roadLoaderState) {
+	case sharedData::RoadLoaderState::NOT_INITIALIZED:
+		mapLoaderState.setString("Map load status: Not Initialized");
+		break;
+	case sharedData::RoadLoaderState::IDLE:
+		mapLoaderState.setString("Map load status: Idle");
+		break;
+	case sharedData::RoadLoaderState::LOADING_MAP:
+		mapLoaderState.setString("Map load status: Map loading in progress");
+		break;
+	default:
+		break;
+	}
+	m_windowContent.texts.push_back(mapLoaderState);
+	sf::Text currentPos(m_font);
+	currentPos.setString("Current position: " + std::to_string(hpptr->inputPos.lat) + "," + std::to_string(hpptr->inputPos.lon));
+	m_windowContent.texts.push_back(currentPos);
+	sf::Text currentRoadInfo(m_font);
+	currentRoadInfo.setString("Current road: " + hpptr->currentRoad.attributes.name + ", SL: " + hpptr->currentRoad.attributes.speedLimit);
+	m_windowContent.texts.push_back(currentRoadInfo);
+
+	// draw roads (only if there is some data available according to horizon generator
+	if (m_shareData->outputHorizonDataAvailable) {
+		renderedRoad r;
+		r.roadID = hpptr->currentRoad.id;
+		for (const auto& node : hpptr->currentRoad.nodes)
+		{
+			r.roadPoints.push_back(sf::Vertex{ sf::Vector2f(node.lon(), node.lat()), sf::Color::Green });
+		}
+		m_windowContent.roads.push_back(r);
+		for (const auto& path : hpptr->childPaths)
+		{
+			renderedRoad rs;
+			for (const auto& node : path.subPath.nodes)
+			{
+				rs.roadPoints.push_back(sf::Vertex{ sf::Vector2f(node.lon(), node.lat()), sf::Color::White });
+			}
+			m_windowContent.roads.push_back(rs);
+		}
+	}
+	
 }
 
 void fancyFrontEndWorker::drawCurrentWindow() {
 	m_window.clear();
 
-	// loop all roads and draw them
+	// loop all roads and draw them TODO: scale so thay actually show up in the output
 	for (auto& r : m_windowContent.roads)
 	{
 		m_window.draw(r.roadPoints.data(), r.roadPoints.size(), sf::PrimitiveType::LineStrip);
 	}
-	std::vector<sf::Vertex> test;
-	test.push_back(sf::Vertex{ sf::Vector2f(30.f, 300.f), sf::Color::Green });
-	test.push_back(sf::Vertex{ sf::Vector2f(30.f, 600.f), sf::Color::Green });
-	test.push_back(sf::Vertex{ sf::Vector2f(300.f, 300.f), sf::Color::Green });
-	m_window.draw(test.data(), test.size(), sf::PrimitiveType::LineStrip);
+	
+	// loop all texts and write them
+	for (size_t i = 0; i < m_windowContent.texts.size(); i++) {
+		auto& t = m_windowContent.texts[i];
+		t.setFillColor(sf::Color::White);
+		t.setCharacterSize(20);
+		t.setPosition({ 0, static_cast<float>(i) * 20.f });
+		m_window.draw(t);
+	}
+
 	m_window.display();
 }
