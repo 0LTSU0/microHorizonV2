@@ -64,8 +64,8 @@ public:
 
 // ----------------------------- TEST FULL POSITION MATCHER IMPL ----------------------------------------------
 
-// Position on Haukiputaantie far from intersections
-// Expect res to be on Haukiputaantie
+// Position on Haukiputaantie far from intersections -> Expect res to be on Haukiputaantie
+// In map data road is modelled North to South -> Expect travel direction to be opposite 
 TEST_F(HorizonGeneratorTests, mapMatcherTest1) {
     readMap(MAP_SIMPLE_NEAR_HAUKIPUDAS);
     inputPosition inputPos;
@@ -75,10 +75,11 @@ TEST_F(HorizonGeneratorTests, mapMatcherTest1) {
 
     auto res = matchPosition(inputPos, m_shareData);
     EXPECT_EQ(res.id, 321529018);
+    EXPECT_EQ(res.direction, sharedData::OPPOSITE_VEHICLE_TRAVEL);
 }
 
-// Position on Haukiputaantie near intersection
-// Expect res to be on Haukiputaantie
+// Position on Haukiputaantie near intersection -> Expect res to be on Haukiputaantie
+// In map data road is modelled North to South -> Expect travel direction to be opposite
 TEST_F(HorizonGeneratorTests, mapMatcherTest2) {
     readMap(MAP_SIMPLE_NEAR_HAUKIPUDAS);
     inputPosition inputPos;
@@ -88,10 +89,11 @@ TEST_F(HorizonGeneratorTests, mapMatcherTest2) {
 
     auto res = matchPosition(inputPos, m_shareData);
     EXPECT_EQ(res.id, 321529018);
+    EXPECT_EQ(res.direction, sharedData::OPPOSITE_VEHICLE_TRAVEL);
 }
 
-// Position on Haukiputaantie near intersection but heading is turning onto Takkurananntie
-// Expect res to be on Takkurannantie
+// Position on Haukiputaantie near intersection but heading is turning onto Takkurananntie -> Expect res to be on Takkurannantie
+// In map data this part of Takkurannantie is modelled west to east -> Expect travel direction to be same as driving
 TEST_F(HorizonGeneratorTests, mapMatcherTest3) {
     readMap(MAP_SIMPLE_NEAR_HAUKIPUDAS);
     inputPosition inputPos;
@@ -101,6 +103,7 @@ TEST_F(HorizonGeneratorTests, mapMatcherTest3) {
 
     auto res = matchPosition(inputPos, m_shareData);
     EXPECT_EQ(res.id, 168741105);
+    EXPECT_EQ(res.direction, sharedData::SAME_VEHICLE_TRAVEL);
 }
 
 // Position on Saaristonkatu "far" from intersections

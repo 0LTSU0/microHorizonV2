@@ -80,27 +80,27 @@ void fancyFrontEndWorker::prepareCurrentWindow() {
 	currentPos.setString("Current position: " + std::to_string(hpptr->inputPos.lat) + "," + std::to_string(hpptr->inputPos.lon));
 	m_windowContent.texts.push_back(currentPos);
 	sf::Text currentRoadName(m_font);
-	currentRoadName.setString("Current road: " + hpptr->currentRoad.attributes.name);
+	currentRoadName.setString("Current road: " + hpptr->path.road.attributes.name);
 	m_windowContent.texts.push_back(currentRoadName);
 	sf::Text currentRoadInfo(m_font);
-	currentRoadInfo.setString("Current attributes: Speed Limit - " + hpptr->currentRoad.attributes.speedLimit + " | Road type - " + hpptr->currentRoad.attributes.highway_type);
+	currentRoadInfo.setString("Current attributes: Speed Limit - " + hpptr->path.road.attributes.speedLimit + " | Road type - " + hpptr->path.road.attributes.highway_type);
 	m_windowContent.texts.push_back(currentRoadInfo);
 
 	// draw roads (only if there is some data available according to horizon generator
 	std::pair<float, float> transformedPts;
 	if (m_shareData->outputHorizonDataAvailable) {
 		renderedRoad r;
-		r.roadID = hpptr->currentRoad.id;
-		for (const auto& node : hpptr->currentRoad.nodes)
+		r.roadID = hpptr->path.road.id;
+		for (const auto& node : hpptr->path.road.nodes)
 		{
 			transformedPts = latLonTo2d(node.lat(), node.lon(), hpptr->inputPos.lat, hpptr->inputPos.lon);
 			r.roadPoints.push_back(sf::Vertex{ sf::Vector2f(transformedPts.first + m_screenCenter.x, transformedPts.second + m_screenCenter.y), sf::Color::Green });
 		}
 		m_windowContent.roads.push_back(r);
-		for (const auto& path : hpptr->childPaths)
+		for (const auto& path : hpptr->path.childPaths)
 		{
 			renderedRoad rs;
-			for (const auto& node : path.subPath.nodes)
+			for (const auto& node : path.road.nodes)
 			{
 				transformedPts = latLonTo2d(node.lat(), node.lon(), hpptr->inputPos.lat, hpptr->inputPos.lon);
 				rs.roadPoints.push_back(sf::Vertex{ sf::Vector2f(transformedPts.first + m_screenCenter.x, transformedPts.second + m_screenCenter.y), sf::Color::White });
@@ -109,6 +109,7 @@ void fancyFrontEndWorker::prepareCurrentWindow() {
 		}
 	}
 	
+
 }
 
 

@@ -15,7 +15,8 @@ public:
 
 private:
     bool generateHorizonGraph(const sharedData::inputPosition&);
-    void generateSubPathsForRoad(sharedData::RoadInfo&);
+    void generateSubPathsForRoad(sharedData::pathStruct& path, bool, int);
+    bool extendMPP(sharedData::pathStruct&);
     
     std::shared_ptr<sharedData::SharedData> m_shareData;
 };

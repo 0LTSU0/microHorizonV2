@@ -46,29 +46,58 @@ bool horizonWorker::generateHorizonGraph(const sharedData::inputPosition& pos)
 	m_shareData->outputHorizonDataAvailable = true;
 	m_shareData->horizonDataLock.lock();
 	m_shareData->horizonPositon.inputPos = pos;
-	m_shareData->horizonPositon.currentRoad = currentRoad;
+	m_shareData->horizonPositon.path.road = currentRoad;
 	m_shareData->horizonDataLock.unlock();
 
-	generateSubPathsForRoad(currentRoad);
+	generateSubPathsForRoad(m_shareData->horizonPositon.path, true);
+	bool targetDistReached = extendMPP(m_shareData->horizonPositon.path);
 
+	return true;
+}
+
+// TODO improve logic here. Now priority is that 
+// try to stay on road with same name. If not possible
+// take the highest road class. If many share the same
+// take the one that has least trun from current path
+sharedData::pathStruct& chooseMostProbableTransition(sharedData::pathStruct& currentPath)
+{
+
+	return currentPath.childPaths[0];
+}
+
+bool horizonWorker::extendMPP(sharedData::pathStruct& startPath)
+{
+	float targetDist = 1000; // temp, to be configurable
+	sharedData::pathStruct& currentPath = startPath;
+	int previousPieceOfMPP = currentPath.road.id;
+	while (false)
+	{
+		if (currentPath.childPaths.size() == 0) {
+			break; //there are no children, we cannot continue
+		}
+		currentPath = chooseMostProbableTransition(currentPath);
+		generateSubPathsForRoad(currentPath, false);
+	}
+	
 	return true;
 }
 
 // TODO: we should probably instead of doing this keep track of some kind of "node to way" dict
 // when performing map load because looping through EVERYTHING is quite slow
-void horizonWorker::generateSubPathsForRoad(sharedData::RoadInfo& thisRoad)
+void horizonWorker::generateSubPathsForRoad(sharedData::pathStruct& path, bool pathIsWhereVehicleIs, int previousExtensionId)
 {
 	m_shareData->horizonDataLock.lock();
 	m_shareData->mapDataMutex.lock();
-	m_shareData->horizonPositon.childPaths.clear();
-	for (auto& node : thisRoad.nodes)
+	path.childPaths.clear();
+	int parentNodeI = 0;
+	for (auto& node : path.road.nodes)
 	{
 		for (auto& road : m_shareData->mapData)
 		{
 			bool roadIsSubRoad = false;
 			for (auto& subnode : road.nodes)
 			{
-				if (node == subnode && thisRoad.id != road.id)
+				if (node == subnode && path.road.id != road.id)
 				{
 					roadIsSubRoad = true;
 					break;
@@ -76,10 +105,28 @@ void horizonWorker::generateSubPathsForRoad(sharedData::RoadInfo& thisRoad)
 			}
 			if (roadIsSubRoad)
 			{
-				auto child = sharedData::childPath({}, road);
-				m_shareData->horizonPositon.childPaths.push_back(child);
+				auto child = sharedData::pathStruct(road, {});
+				
+				// if we are generating subpaths for the path where our vehicle is currently located on
+				// the subpath(s) that are located "behid" of vehicle/travel direction needs to be ignored
+				// in mpp generation
+				if (pathIsWhereVehicleIs && parentNodeI == 0 && path.road.direction == sharedData::SAME_VEHICLE_TRAVEL ||
+					pathIsWhereVehicleIs && parentNodeI == path.road.nodes.size() - 1 && path.road.direction == sharedData::OPPOSITE_VEHICLE_TRAVEL)
+				{
+					child.ignoreInMPPGeneration = true;
+					path.childPaths.push_back(child);
+					continue;
+				}
+				// otherwise, if this connected road is the previous piece of predicted path, it needs to be ignored and also should not be pushed to childPaths
+				if (road.id == previousExtensionId)
+				{
+					continue;
+				}
+
+				path.childPaths.push_back(child);
 			}
 		}
+		parentNodeI++;
 	}
 	m_shareData->mapDataMutex.unlock();
 	m_shareData->horizonDataLock.unlock();

@@ -49,7 +49,9 @@ static double calculateHeading(double lat1rad, double lon1rad, double lat2rad, d
 /*
 When positive Y axis corresponds to heading 0, this calculates the "heading" of given segment
 in both ways as there really isn't a way to know which way a road is modelled in OSM data 
-and we might be driving along it to either direction.
+and we might be driving along it to either direction. However, headingCandidate1 is the heading that
+corresponds to what is modelled in osm data i.e. if its large then we are travelling opposite direction
+of how osm data is modelled.
 
 TODO: Check if this math actually makes any sense... When you plot latlon coordinates on 2d surface,
 the result is quite distored and I'm not sure if this accounts for that. This logic is same as
@@ -142,6 +144,25 @@ sharedData::RoadInfo matchPosition(const sharedData::inputPosition& pos, std::sh
 		}
 	}
 
+	// first value of segHeadings is the one between current travel direction and how OSM data is modelled. If its >90 then assume we are travelling
+	// to the opposite direction of how the segment happens to be modelled https://wiki.openstreetmap.org/wiki/Way
+	auto bestSegHeadings = calculateSegmentHeadings(bestMatchSegment);
+	auto secondBestHeadings = calculateSegmentHeadings(secondBestMatchSegment);
+	if (std::fabs(pos.heading - bestSegHeadings.first) > 90)
+	{
+		bestMatch.direction = sharedData::OPPOSITE_VEHICLE_TRAVEL;
+	}
+	else {
+		bestMatch.direction = sharedData::SAME_VEHICLE_TRAVEL;
+	}
+	if (std::fabs(pos.heading - secondBestHeadings.first) > 90)
+	{
+		secondBestMatch.direction = sharedData::OPPOSITE_VEHICLE_TRAVEL;
+	}
+	else {
+		secondBestMatch.direction = sharedData::SAME_VEHICLE_TRAVEL;
+	}
+
 	// If the best and second best candidates are too near, select the one that aligns better with input pos
 	if (std::fabs(secondBestMatchMatchingDist - bestMatchMatchingDist) <= tooNearThreshold)
 	{
@@ -156,7 +177,7 @@ As the main matchPosition() implementation, this needs to be improved. Currently
 the one that aligns better with the heading of our input position OR if the heading correspondances
 are very close (i.e. there are two parellel roads, then it chooses the nearer one.
 */
-sharedData::RoadInfo chooseFromTwoBestCandidates(const sharedData::inputPosition& pos, const Segment& bestSeg, const Segment& secondSeg, const sharedData::RoadInfo& bestRoad, const sharedData::RoadInfo& secondRoad)
+sharedData::RoadInfo chooseFromTwoBestCandidates(const sharedData::inputPosition& pos, const Segment& bestSeg, const Segment& secondSeg, sharedData::RoadInfo& bestRoad, sharedData::RoadInfo& secondRoad)
 {
 	auto bestSegHeadings = calculateSegmentHeadings(bestSeg);
 	auto secondBestHeadings = calculateSegmentHeadings(secondSeg);

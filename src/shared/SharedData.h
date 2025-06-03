@@ -39,6 +39,11 @@ public:
 	};
 };
 
+enum roadModelDirection {
+	SAME_VEHICLE_TRAVEL,
+	OPPOSITE_VEHICLE_TRAVEL
+};
+
 struct RoadAttributes {
 	std::string name;
 	std::string highway_type;
@@ -49,6 +54,7 @@ struct RoadInfo {
 	osmium::object_id_type id;
 	RoadAttributes attributes;
 	std::vector<osmium::Location> nodes;
+	roadModelDirection direction = SAME_VEHICLE_TRAVEL;
 };
 
 enum RoadLoaderState {
@@ -57,16 +63,16 @@ enum RoadLoaderState {
 	IDLE
 };
 
-struct childPath {
-	std::vector<RoadInfo> childPaths;
-	RoadInfo subPath;
+struct pathStruct {
+	RoadInfo road;
+	std::vector<pathStruct> childPaths;
+	bool ignoreInMPPGeneration = false;
 };
 
 // struct to represent the horizon matched position
 struct h_position {
 	inputPosition inputPos; // input position that resulted in other data of this struct
-	RoadInfo currentRoad;
-	std::vector<childPath> childPaths;
+	pathStruct path;
 };
 
 struct SharedData {
