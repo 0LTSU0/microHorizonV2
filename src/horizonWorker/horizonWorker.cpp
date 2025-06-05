@@ -37,6 +37,7 @@ void horizonWorker::run()
 
 bool horizonWorker::generateHorizonGraph(const sharedData::inputPosition& pos)
 {
+	m_shareData->horizonDataLock.lock();
 	auto currentRoad = matchPosition(pos, m_shareData);
 	if (!isRoadInfoValid(currentRoad))
 	{
@@ -45,14 +46,14 @@ bool horizonWorker::generateHorizonGraph(const sharedData::inputPosition& pos)
 	}
 
 	m_shareData->outputHorizonDataAvailable = true;
-	m_shareData->horizonDataLock.lock();
 	m_shareData->horizonPositon.inputPos = pos;
 	m_shareData->horizonPositon.path.road = currentRoad;
+	
+
+	m_currentMPPLenght = 0.0;
+	bool targetDistReached = extendMPP(m_shareData->horizonPositon.path, true);
+
 	m_shareData->horizonDataLock.unlock();
-
-	generateSubPathsForRoad(m_shareData->horizonPositon.path, true, -1);
-	bool targetDistReached = extendMPP(m_shareData->horizonPositon.path);
-
 	return true;
 }
 
@@ -71,33 +72,35 @@ sharedData::pathStruct& chooseMostProbableTransition(sharedData::pathStruct& cur
 	return currentPath.childPaths[0];
 }
 
-bool horizonWorker::extendMPP(sharedData::pathStruct& startPath)
+bool horizonWorker::extendMPP(sharedData::pathStruct& path, const bool firstIter = false)
 {
 	constexpr float targetDist = 1000; // temp, to be configurable
-	sharedData::pathStruct currentPath = startPath;
-	m_roadIdsOnMPP.push_back(startPath.road.id);
-	float MPPLength = 0.0;
-	while (true)
-	{
-		if (currentPath.childPaths.size() == 0) {
-			break; //there are no children, we cannot continue
+	if (m_currentMPPLenght < targetDist) {
+		m_currentMPPLenght = m_currentMPPLenght + getCurrentRoadSegmentLen(path);
+		if (firstIter) {
+			generateSubPathsForRoad(path, true, -1);
 		}
-		MPPLength = MPPLength + getCurrentRoadSegmentLen(currentPath);
-		if (MPPLength > targetDist) {
-			break;
+		else {
+			generateSubPathsForRoad(path, false, m_roadIdsOnMPP.back());
 		}
-		currentPath = chooseMostProbableTransition(currentPath);
-		generateSubPathsForRoad(currentPath, false, m_roadIdsOnMPP.back());
+		m_roadIdsOnMPP.push_back(path.road.id);
+		path.isPartOfMPP = true;
+		if (path.childPaths.size() == 0) {
+			return false;
+		}
+		sharedData::pathStruct& nextPath = chooseMostProbableTransition(path);
+		extendMPP(nextPath);
+		
 	}
 	
-	return MPPLength > targetDist;
+	return true;
 }
+
 
 // TODO: we should probably instead of doing this keep track of some kind of "node to way" dict
 // when performing map load because looping through EVERYTHING is quite slow
 void horizonWorker::generateSubPathsForRoad(sharedData::pathStruct& path, bool pathIsWhereVehicleIs, int previousExtensionId)
 {
-	m_shareData->horizonDataLock.lock();
 	m_shareData->mapDataMutex.lock();
 	path.childPaths.clear();
 	int parentNodeI = 0;
@@ -147,7 +150,6 @@ void horizonWorker::generateSubPathsForRoad(sharedData::pathStruct& path, bool p
 		parentNodeI++;
 	}
 	m_shareData->mapDataMutex.unlock();
-	m_shareData->horizonDataLock.unlock();
 }
 
 float horizonWorker::getCurrentRoadSegmentLen(sharedData::pathStruct& path)

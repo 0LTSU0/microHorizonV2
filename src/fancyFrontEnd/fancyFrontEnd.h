@@ -39,7 +39,7 @@ public:
 private:
     void prepareCurrentWindow();
     void drawCurrentWindow();
-    void drawSubpathsOfARoad(sharedData::RoadInfo&);
+    void drawChildPaths(std::vector<sharedData::pathStruct> children, const sharedData::h_position*);
     
     sf::Vector2u m_screenCenter;
     std::shared_ptr<sharedData::SharedData> m_shareData;

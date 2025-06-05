@@ -55,6 +55,7 @@ void fancyFrontEndWorker::run() {
 
 
 void fancyFrontEndWorker::prepareCurrentWindow() {
+	const std::lock_guard<std::mutex> lock(m_shareData->horizonDataLock);
 	m_windowContent.roads.clear(); //clear old content form the content vector
 	m_windowContent.texts.clear();
 	const auto* hpptr = &m_shareData->horizonPositon;
@@ -91,30 +92,38 @@ void fancyFrontEndWorker::prepareCurrentWindow() {
 	if (m_shareData->outputHorizonDataAvailable) {
 		renderedRoad r;
 		r.roadID = hpptr->path.road.id;
-		for (const auto& node : hpptr->path.road.nodes)
+		for (const auto& node : hpptr->path.road.nodes) // the segment where car is on
 		{
 			transformedPts = latLonTo2d(node.lat(), node.lon(), hpptr->inputPos.lat, hpptr->inputPos.lon);
 			r.roadPoints.push_back(sf::Vertex{ sf::Vector2f(transformedPts.first + m_screenCenter.x, transformedPts.second + m_screenCenter.y), sf::Color::Green });
 		}
 		m_windowContent.roads.push_back(r);
-		for (const auto& path : hpptr->path.childPaths)
-		{
-			renderedRoad rs;
-			for (const auto& node : path.road.nodes)
-			{
-				transformedPts = latLonTo2d(node.lat(), node.lon(), hpptr->inputPos.lat, hpptr->inputPos.lon);
-				if (path.isPartOfMPP) {
-					rs.roadPoints.push_back(sf::Vertex{ sf::Vector2f(transformedPts.first + m_screenCenter.x, transformedPts.second + m_screenCenter.y), sf::Color::Yellow });
-				}
-				else {
-					rs.roadPoints.push_back(sf::Vertex{ sf::Vector2f(transformedPts.first + m_screenCenter.x, transformedPts.second + m_screenCenter.y), sf::Color::White });
-				}
-			}
-			m_windowContent.roads.push_back(rs);
-		}
+		drawChildPaths(hpptr->path.childPaths, hpptr); //other paths (recursively)
 	}
-	
+}
 
+
+void fancyFrontEndWorker::drawChildPaths(std::vector<sharedData::pathStruct> children, const sharedData::h_position* hpptr)
+{
+	std::pair<float, float> transformedPts;
+	for (const auto& path : children)
+	{
+		renderedRoad rs;
+		if (!path.childPaths.empty()) {
+			drawChildPaths(path.childPaths, hpptr);
+		}
+		for (const auto& node : path.road.nodes)
+		{
+			transformedPts = latLonTo2d(node.lat(), node.lon(), hpptr->inputPos.lat, hpptr->inputPos.lon);
+			if (path.isPartOfMPP) {
+				rs.roadPoints.push_back(sf::Vertex{ sf::Vector2f(transformedPts.first + m_screenCenter.x, transformedPts.second + m_screenCenter.y), sf::Color::Yellow });
+			}
+			else {
+				rs.roadPoints.push_back(sf::Vertex{ sf::Vector2f(transformedPts.first + m_screenCenter.x, transformedPts.second + m_screenCenter.y), sf::Color::White });
+			}
+		}
+		m_windowContent.roads.push_back(rs);
+	}
 }
 
 
