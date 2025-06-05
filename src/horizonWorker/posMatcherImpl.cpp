@@ -177,7 +177,7 @@ As the main matchPosition() implementation, this needs to be improved. Currently
 the one that aligns better with the heading of our input position OR if the heading correspondances
 are very close (i.e. there are two parellel roads, then it chooses the nearer one.
 */
-sharedData::RoadInfo chooseFromTwoBestCandidates(const sharedData::inputPosition& pos, const Segment& bestSeg, const Segment& secondSeg, sharedData::RoadInfo& bestRoad, sharedData::RoadInfo& secondRoad)
+sharedData::RoadInfo chooseFromTwoBestCandidates(const sharedData::inputPosition& pos, const Segment& bestSeg, const Segment& secondSeg, const sharedData::RoadInfo& bestRoad, const sharedData::RoadInfo& secondRoad)
 {
 	auto bestSegHeadings = calculateSegmentHeadings(bestSeg);
 	auto secondBestHeadings = calculateSegmentHeadings(secondSeg);

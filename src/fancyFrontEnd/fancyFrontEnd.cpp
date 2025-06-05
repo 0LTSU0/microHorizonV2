@@ -103,7 +103,12 @@ void fancyFrontEndWorker::prepareCurrentWindow() {
 			for (const auto& node : path.road.nodes)
 			{
 				transformedPts = latLonTo2d(node.lat(), node.lon(), hpptr->inputPos.lat, hpptr->inputPos.lon);
-				rs.roadPoints.push_back(sf::Vertex{ sf::Vector2f(transformedPts.first + m_screenCenter.x, transformedPts.second + m_screenCenter.y), sf::Color::White });
+				if (path.isPartOfMPP) {
+					rs.roadPoints.push_back(sf::Vertex{ sf::Vector2f(transformedPts.first + m_screenCenter.x, transformedPts.second + m_screenCenter.y), sf::Color::Yellow });
+				}
+				else {
+					rs.roadPoints.push_back(sf::Vertex{ sf::Vector2f(transformedPts.first + m_screenCenter.x, transformedPts.second + m_screenCenter.y), sf::Color::White });
+				}
 			}
 			m_windowContent.roads.push_back(rs);
 		}

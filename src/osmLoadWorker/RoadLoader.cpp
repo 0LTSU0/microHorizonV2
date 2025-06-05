@@ -120,7 +120,7 @@ void RoadLoader::way(const osmium::Way& way)
 
                 sharedData::RoadInfo roadInfo{
                      way.id(),
-                     {way.tags().get_value_by_key("name", "Unnamed Road"), highway_tag, way.tags().get_value_by_key("maxspeed", "N/A")},
+                     {way.tags().get_value_by_key("name", "Unnamed Road"), highway_tag, way.tags().get_value_by_key("maxspeed", "N/A"), way.tags().get_value_by_key("oneway", "no") == "yes"},
                      road_nodes
                 };
                 m_tmpRoadNetwork.push_back(roadInfo);

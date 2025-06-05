@@ -48,6 +48,7 @@ struct RoadAttributes {
 	std::string name;
 	std::string highway_type;
 	std::string speedLimit;
+	bool oneWay = false;
 };
 
 struct RoadInfo {
@@ -67,6 +68,7 @@ struct pathStruct {
 	RoadInfo road;
 	std::vector<pathStruct> childPaths;
 	bool ignoreInMPPGeneration = false;
+	bool isPartOfMPP = false;
 };
 
 // struct to represent the horizon matched position

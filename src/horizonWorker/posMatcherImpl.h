@@ -11,5 +11,5 @@ struct Segment {
 };
 
 sharedData::RoadInfo matchPosition(const sharedData::inputPosition&, std::shared_ptr<sharedData::SharedData>);
-sharedData::RoadInfo chooseFromTwoBestCandidates(const sharedData::inputPosition&, const Segment&, const Segment&, sharedData::RoadInfo&, sharedData::RoadInfo&);
+sharedData::RoadInfo chooseFromTwoBestCandidates(const sharedData::inputPosition&, const Segment&, const Segment&, const sharedData::RoadInfo&, const sharedData::RoadInfo&);
 bool isRoadInfoValid(const sharedData::RoadInfo&); //Check if given RoadData seems valid

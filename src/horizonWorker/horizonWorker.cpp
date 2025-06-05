@@ -1,6 +1,7 @@
 #include <horizonWorker.h>
 #include <posMatcherImpl.h>
 #include <chrono>
+#include <osmium/geom/haversine.hpp>
 
 void horizonWorker::run()
 {
@@ -49,7 +50,7 @@ bool horizonWorker::generateHorizonGraph(const sharedData::inputPosition& pos)
 	m_shareData->horizonPositon.path.road = currentRoad;
 	m_shareData->horizonDataLock.unlock();
 
-	generateSubPathsForRoad(m_shareData->horizonPositon.path, true);
+	generateSubPathsForRoad(m_shareData->horizonPositon.path, true, -1);
 	bool targetDistReached = extendMPP(m_shareData->horizonPositon.path);
 
 	return true;
@@ -61,25 +62,35 @@ bool horizonWorker::generateHorizonGraph(const sharedData::inputPosition& pos)
 // take the one that has least trun from current path
 sharedData::pathStruct& chooseMostProbableTransition(sharedData::pathStruct& currentPath)
 {
-
+	for (int i = 0; i < currentPath.childPaths.size(); i++) {
+		if (!currentPath.childPaths[i].ignoreInMPPGeneration) {
+			currentPath.childPaths[i].isPartOfMPP = true;
+			return currentPath.childPaths[i];
+		}
+	}
 	return currentPath.childPaths[0];
 }
 
 bool horizonWorker::extendMPP(sharedData::pathStruct& startPath)
 {
-	float targetDist = 1000; // temp, to be configurable
-	sharedData::pathStruct& currentPath = startPath;
-	int previousPieceOfMPP = currentPath.road.id;
-	while (false)
+	constexpr float targetDist = 1000; // temp, to be configurable
+	sharedData::pathStruct currentPath = startPath;
+	m_roadIdsOnMPP.push_back(startPath.road.id);
+	float MPPLength = 0.0;
+	while (true)
 	{
 		if (currentPath.childPaths.size() == 0) {
 			break; //there are no children, we cannot continue
 		}
+		MPPLength = MPPLength + getCurrentRoadSegmentLen(currentPath);
+		if (MPPLength > targetDist) {
+			break;
+		}
 		currentPath = chooseMostProbableTransition(currentPath);
-		generateSubPathsForRoad(currentPath, false);
+		generateSubPathsForRoad(currentPath, false, m_roadIdsOnMPP.back());
 	}
 	
-	return true;
+	return MPPLength > targetDist;
 }
 
 // TODO: we should probably instead of doing this keep track of some kind of "node to way" dict
@@ -95,6 +106,7 @@ void horizonWorker::generateSubPathsForRoad(sharedData::pathStruct& path, bool p
 		for (auto& road : m_shareData->mapData)
 		{
 			bool roadIsSubRoad = false;
+			bool firstNodeIsCommon = true;
 			for (auto& subnode : road.nodes)
 			{
 				if (node == subnode && path.road.id != road.id)
@@ -102,6 +114,7 @@ void horizonWorker::generateSubPathsForRoad(sharedData::pathStruct& path, bool p
 					roadIsSubRoad = true;
 					break;
 				}
+				firstNodeIsCommon = false;
 			}
 			if (roadIsSubRoad)
 			{
@@ -117,6 +130,11 @@ void horizonWorker::generateSubPathsForRoad(sharedData::pathStruct& path, bool p
 					path.childPaths.push_back(child);
 					continue;
 				}
+				// also if the "child" is oneway street which is modelled in direction where the last point is on our parent
+				// road, then it means we cannot drive there -> needs to be ignored
+				else if (road.attributes.oneWay && !firstNodeIsCommon) {
+					continue;
+				}
 				// otherwise, if this connected road is the previous piece of predicted path, it needs to be ignored and also should not be pushed to childPaths
 				if (road.id == previousExtensionId)
 				{
@@ -130,4 +148,15 @@ void horizonWorker::generateSubPathsForRoad(sharedData::pathStruct& path, bool p
 	}
 	m_shareData->mapDataMutex.unlock();
 	m_shareData->horizonDataLock.unlock();
+}
+
+float horizonWorker::getCurrentRoadSegmentLen(sharedData::pathStruct& path)
+{
+	float totalDistance = 0.0;
+	for (size_t i = 1; i < path.road.nodes.size(); ++i) {
+		totalDistance += osmium::geom::haversine::distance(
+			path.road.nodes[i - 1], path.road.nodes[i]
+		);
+	}
+	return totalDistance;
 }
